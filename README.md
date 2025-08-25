@@ -122,10 +122,11 @@ You (via email/Slack) get:
 
 ---
 
-## ✨ Future Improvements
-- Use Auto-Scaling Groups instead of manual Lambda.  
-- Add application-level health checks.  
-- Deploy using Infrastructure-as-Code (Terraform/CloudFormation).  
+## 🔮 Future Plans
+In the next phase of this project, I plan to:
+1. Implement Auto Scaling Groups to replace the manual Lambda approach.
+2. Integrate application-level health checks for smarter recovery.
+3. Migrate deployment to Infrastructure-as-Code using Terraform or CloudFormation.
 
 ---
 
