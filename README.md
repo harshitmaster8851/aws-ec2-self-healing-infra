@@ -72,7 +72,7 @@ You (via email/Slack) get:
 
 ## 📂 Project Structure Diagram
 
-<img width="1536" height="1024" alt="self-healing-ec2-structure" src="https://github.com/user-attachments/assets/8388d22c-2e06-4bf4-9787-423e22c57f17" />
+<img width="1536" height="1024" alt="self-healing-ec2-structure" src="https://github.com/user-attachments/assets/87d5d109-ed00-40b5-9adb-314742fdb42f" />
 
 
 ---
