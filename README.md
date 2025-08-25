@@ -71,7 +71,6 @@ You (via email/Slack) get:
 ---
 
 ## 📂 Project Structure Diagram
-![Architecture](project_structure/self-healing-ec2-structure.png)
 
 <img width="1536" height="1024" alt="self-healing-ec2-structure" src="https://github.com/user-attachments/assets/8388d22c-2e06-4bf4-9787-423e22c57f17" />
 
@@ -105,7 +104,6 @@ You (via email/Slack) get:
 ---
 
 ## 📸 Screenshots
-(Add your AWS screenshots here with captions)  
 - CloudWatch Alarm
    <img width="955" height="472" alt="image" src="https://github.com/user-attachments/assets/bde641f9-ebb1-43cd-8f90-9640ff498d83" />
  
