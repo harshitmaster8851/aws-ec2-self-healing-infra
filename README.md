@@ -10,6 +10,11 @@ If an EC2 instance becomes unhealthy, CloudWatch triggers an alarm → SNS → L
 This project simulates a self-healing server architecture often used in production systems where uptime is critical. In enterprises like e-commerce, banking, SaaS platforms, or streaming services, downtime of even a few minutes can cause huge revenue losses and bad user experience.
 Self-Healing Infrastructure on AWS – Designed and implemented a fault-tolerant system using EC2, CloudWatch, SNS, and Lambda to automatically detect instance failures and launch replacements. Achieved high availability and resiliency by eliminating manual intervention and ensuring continuous uptime.
 
+Imagine running a production web app. If one server crashes at 2 AM, this system ensures:  
+- No downtime — a new instance is automatically launched.  
+- No manual intervention — DevOps team can sleep peacefully 😴.  
+- Perfect for startups or enterprises wanting **cost-effective HA** without full-blown Kubernetes.
+
 
 ---
 
