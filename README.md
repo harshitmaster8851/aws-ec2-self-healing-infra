@@ -145,7 +145,7 @@ You (via email/Slack) get:
          Minimal, production-ready self-healing Lambda.
          Assumes SNS event is well-formed.
    - lambda_function_debug.py
-         lambda/lambda_function_debug.py
+         https://github.com/harshitmaster8851/aws-ec2-self-healing-infra/blob/main/lambda/lambda_function_debug.py
          Minimal, production-ready self-healing Lambda.
          Assumes SNS event is well-formed.
 
