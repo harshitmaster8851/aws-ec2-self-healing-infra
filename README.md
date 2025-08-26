@@ -30,50 +30,38 @@ Imagine running a production web app. If one server crashes at 2 AM, this system
 
 ## 🏗️ Flow of Execution (Runtime)
 
-1️⃣ EC2 Boot 🖥️
-Your app runs on an EC2 instance.
+1️⃣ EC2 Boot ---> Your app runs on an EC2 instance.
 Tagged with SelfHeal=true, launched from a known AMI.
 
-2️⃣ Health Monitoring 📊
-CloudWatch samples StatusCheckFailed_System & StatusCheckFailed_Instance every 1 min.
+2️⃣ Health Monitoring---> CloudWatch samples StatusCheckFailed_System & StatusCheckFailed_Instance every 1 min.
 
-3️⃣ Alarm Trigger 🚨
-If >=1 failed datapoint in 1 eval period → state flips to ALARM.
+3️⃣ Alarm Trigger ---> If >=1 failed datapoint in 1 eval period → state flips to ALARM.
 Missing data = ignored.
 
-4️⃣ SNS Notification 📩
-CloudWatch Alarm action publishes JSON to selfheal-topic.
+4️⃣ SNS Notification ---> CloudWatch Alarm action publishes JSON to selfheal-topic.
 
-5️⃣ Lambda Trigger ⚡
-SNS invokes the selfheal-replacer Lambda with that payload.
+5️⃣ Lambda Trigger ---> SNS invokes the selfheal-replacer Lambda with that payload.
 
-6️⃣ Parse & Validate 🔍
-Extracts InstanceId from Message.Trigger.Dimensions.
-✅ Safety check: only proceed if tag SelfHeal=true.
+6️⃣ Parse & Validate ---> Extracts InstanceId from Message.Trigger.Dimensions.
 
-7️⃣ Terminate Old Instance ❌💻
-Lambda calls TerminateInstances for the unhealthy box.
+7️⃣ Terminate Old Instance ---> Lambda calls TerminateInstances for the unhealthy box.
 
-8️⃣ Launch Replacement 🚀
-Lambda spins up a fresh EC2 with env-configured params:
+8️⃣ Launch Replacement ---> Lambda spins up a fresh EC2 with env-configured params:
 AMI_ID
 INSTANCE_TYPE
 SUBNET_ID
 SECURITY_GROUP
 KEY_NAME
 
-9️⃣ Associate Elastic IP 🌐
-Lambda attaches the pre-allocated Elastic IP (EIP_ALLOCATION_ID) to the new instance.
+9️⃣ Associate Elastic IP ---> Lambda attaches the pre-allocated Elastic IP (EIP_ALLOCATION_ID) to the new instance.
 This ensures your app is always reachable at the same public IP.
 
-🔟 Tagging 🏷️
-New instance auto-tagged:
+🔟 Tagging ---> New instance auto-tagged:
 SelfHealed=true
 ReplacedInstance=<old-id>
 Timestamp=<UTC>
 
-1️⃣1️⃣ Notify & Report 📢
-Lambda pushes a summary back to SNS.
+1️⃣1️⃣ Notify & Report ---> Lambda pushes a summary back to SNS.
 You (via email/Slack) get:
 ❌ Old Instance ID
 ✅ New Instance ID + Elastic IP
