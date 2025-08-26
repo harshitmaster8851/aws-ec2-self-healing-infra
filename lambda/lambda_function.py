@@ -1,4 +1,4 @@
-import boto3, os, json, time
+import boto3, os, json
 from datetime import datetime
 
 ec2 = boto3.client("ec2")
@@ -11,6 +11,7 @@ INSTANCE_TYPE = os.getenv("INSTANCE_TYPE")
 SUBNET_ID = os.getenv("SUBNET_ID")
 SEC_GROUP = os.getenv("SEC_GROUP")
 KEY_NAME = os.getenv("KEY_NAME")
+EIP_ALLOCATION_ID = os.getenv("EIP_ALLOCATION_ID")   
 DEMO = os.getenv("DEMO_MODE", "true").lower() == "true"
 
 
@@ -24,12 +25,14 @@ def lambda_handler(event, context):
 
     # Step 1: Launch replacement
     res = ec2.run_instances(
-        ImageId=AMI_ID, InstanceType=INSTANCE_TYPE,
+        ImageId=AMI_ID,
+        InstanceType=INSTANCE_TYPE,
         MinCount=1, MaxCount=1,
-        SubnetId=SUBNET_ID, SecurityGroupIds=[SEC_GROUP],
+        SubnetId=SUBNET_ID,
+        SecurityGroupIds=[SEC_GROUP],
         KeyName=KEY_NAME
     )
-    new_id =  res["Instances"][0]["InstanceId"]
+    new_id = res["Instances"][0]["InstanceId"]
     print(f" Launched replacement instance: {new_id}")
 
     # Step 2: Wait until running
@@ -44,13 +47,22 @@ def lambda_handler(event, context):
         {"Key": "Timestamp", "Value": datetime.utcnow().isoformat()}
     ])
 
-    # Step 4: Terminate old instance
+    # Step 4: Reattach Elastic IP (using Allocation ID directly)
+    if EIP_ALLOCATION_ID:
+        ec2.associate_address(
+            AllocationId=EIP_ALLOCATION_ID,
+            InstanceId=new_id,
+            AllowReassociation=True
+        )
+        print(f" Elastic IP allocation {EIP_ALLOCATION_ID} attached to {new_id}")
+
+    # Step 5: Terminate old instance
     ec2.terminate_instances(InstanceIds=[instance_id])
     print(f" Terminated old instance: {instance_id}")
 
-    # Step 5: Notify
+    # Step 6: Notify via SNS
     sns.publish(
         TopicArn=SNS_TOPIC_ARN,
         Subject=" EC2 Self-Healing Triggered",
-        Message=f"Old: {instance_id}\nNew: {new_id}\nTime: {datetime.utcnow().isoformat()}"
+        Message=f"Old: {instance_id}\nNew: {new_id}\nElasticIPAlloc: {EIP_ALLOCATION_ID}\nTime: {datetime.utcnow().isoformat()}"
     )
