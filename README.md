@@ -8,7 +8,8 @@ If an EC2 instance becomes unhealthy, CloudWatch triggers an alarm → SNS → L
 
 ## 🔥 Real-world Use Case
 This project simulates a self-healing server architecture often used in production systems where uptime is critical. In enterprises like e-commerce, banking, SaaS platforms, or streaming services, downtime of even a few minutes can cause huge revenue losses and bad user experience.
-Self-Healing Infrastructure on AWS – Designed and implemented a fault-tolerant system using EC2, CloudWatch, SNS, and Lambda to automatically detect instance failures and launch replacements. Achieved high availability and resiliency by eliminating manual intervention and ensuring continuous uptime.
+Self-Healing Infrastructure on AWS – Designed and implemented a fault-tolerant system using EC2, CloudWatch, SNS, Lambda, and Elastic IP to automatically detect instance failures, replace them, and keep the service always reachable at the same IP.
+Achieved high availability and resiliency by eliminating manual intervention and ensuring continuous uptime.
 
 Imagine running a production web app. If one server crashes at 2 AM, this system ensures:  
 - No downtime — a new instance is automatically launched.  
@@ -23,6 +24,7 @@ Imagine running a production web app. If one server crashes at 2 AM, this system
 - AWS CloudWatch (Alarm)
 - AWS SNS
 - AWS Lambda (Python + boto3)
+- AWS Elastic IP
 
 ---
 
@@ -60,17 +62,21 @@ SUBNET_ID
 SECURITY_GROUP
 KEY_NAME
 
-9️⃣ Tagging 🏷️
+9️⃣ Associate Elastic IP 🌐
+Lambda attaches the pre-allocated Elastic IP (EIP_ALLOCATION_ID) to the new instance.
+This ensures your app is always reachable at the same public IP.
+
+🔟 Tagging 🏷️
 New instance auto-tagged:
 SelfHealed=true
 ReplacedInstance=<old-id>
 Timestamp=<UTC>
 
-🔟 Notify & Report 📢
+1️⃣1️⃣ Notify & Report 📢
 Lambda pushes a summary back to SNS.
 You (via email/Slack) get:
 ❌ Old Instance ID
-✅ New Instance ID
+✅ New Instance ID + Elastic IP
 
 
 ---
@@ -86,24 +92,31 @@ You (via email/Slack) get:
 1. **Launch EC2 Instance**  
    - Select AMI, instance type, subnet, security group, and key pair.  
 
-2. **Create CloudWatch Alarm**  
-   - Metric: `StatusCheckFailed`.  
-   - Set threshold = `>= 1` for 1 datapoint.  
+2. **Allocate Elastic IP**
+   - Reserve an Elastic IP from AWS console.
+   - Note down its Allocation ID (used in Lambda)..  
+
+3. **Create CloudWatch Alarm**  
+   - Metric: StatusCheckFailed.
+   - Threshold = >= 1 for 1 datapoint.
    - Action = Send to SNS topic.  
 
-3. **Create SNS Topic**  
-   - Create a new topic → Subscribe with your email.  
-
-4. **Lambda Setup**  
+4. **Create SNS Topic**  
+   - Create a new topic → Subscribe with your email.
+  
+   
+5. **Lambda Setup**  
    - Runtime: Python 3.x.  
    - IAM Role: Attach `AmazonEC2FullAccess` + `AmazonSNSFullAccess`.  
    - Add environment variables:  
-     - `AMI_ID`, `SUBNET_ID`, `SECURITY_GROUP`, `KEY_NAME`, `SNS_TOPIC_ARN`.  
-   - Paste the code from `lambda_function.py`.  
+     - `AMI_ID`, `SUBNET_ID`, `SECURITY_GROUP`, `KEY_NAME`, `SNS_TOPIC_ARN`, `CloudWatchLogsFullAccess` 
+   - Paste the code from `lambda_function.py`.
+   - Add environment variables:
+     - `AMI_ID`, `INSTANCE_TYPE`, `SUBNET_ID`, `SECURITY_GROUP`, `KEY_NAME`, `SNS_TOPIC_ARN`, `EIP_ALLOCATION_ID`, `DEMO_MODE = "false"`
 
 5. **Test the System**  
    - Stop or break EC2 instance → Alarm triggers.  
-   - Lambda runs → Old instance terminated, new launched.  
+   - Lambda runs → Old instance terminated, new launched, Elastic IP reattached.
    - SNS sends email with details.  
 
 ---
