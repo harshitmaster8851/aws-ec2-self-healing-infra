@@ -1,4 +1,4 @@
-## 🚑 AWS EC2 Self-Healing Infrastructure.....
+##  AWS EC2 Self-Healing Infrastructure.....
 This project demonstrates a **self-healing cloud architecture** on AWS.  
 If an EC2 instance becomes unhealthy, CloudWatch triggers an alarm → SNS → Lambda → terminates the bad instance and launches a new one automatically.
 
@@ -6,14 +6,14 @@ If an EC2 instance becomes unhealthy, CloudWatch triggers an alarm → SNS → L
 ---
 
 
-## 🔥 Real-world Use Case
+##  Real-world Use Case
 This project simulates a self-healing server architecture often used in production systems where uptime is critical. In enterprises like e-commerce, banking, SaaS platforms, or streaming services, downtime of even a few minutes can cause huge revenue losses and bad user experience.
 Self-Healing Infrastructure on AWS – Designed and implemented a fault-tolerant system using EC2, CloudWatch, SNS, Lambda, and Elastic IP to automatically detect instance failures, replace them, and keep the service always reachable at the same IP.
 Achieved high availability and resiliency by eliminating manual intervention and ensuring continuous uptime.
 
 Imagine running a production web app. If one server crashes at 2 AM, this system ensures:  
 - No downtime — a new instance is automatically launched.  
-- No manual intervention — DevOps team can sleep peacefully 😴.  
+- No manual intervention — DevOps team can sleep peacefully .  
 - Perfect for startups or enterprises wanting **cost-effective HA** without full-blown Kubernetes.
 
 
@@ -28,40 +28,40 @@ Imagine running a production web app. If one server crashes at 2 AM, this system
 
 ---
 
-## 🏗️ Flow of Execution (Runtime)
+##  Flow of Execution (Runtime)
 
-1️⃣ EC2 Boot ---> Your app runs on an EC2 instance.
+1️ EC2 Boot ---> Your app runs on an EC2 instance.
 Tagged with SelfHeal=true, launched from a known AMI.
 
-2️⃣ Health Monitoring---> CloudWatch samples StatusCheckFailed_System & StatusCheckFailed_Instance every 1 min.
+2️ Health Monitoring---> CloudWatch samples StatusCheckFailed_System & StatusCheckFailed_Instance every 1 min.
 
-3️⃣ Alarm Trigger ---> If >=1 failed datapoint in 1 eval period → state flips to ALARM.
+3️ Alarm Trigger ---> If >=1 failed datapoint in 1 eval period → state flips to ALARM.
 Missing data = ignored.
 
-4️⃣ SNS Notification ---> CloudWatch Alarm action publishes JSON to selfheal-topic.
+4️ SNS Notification ---> CloudWatch Alarm action publishes JSON to selfheal-topic.
 
-5️⃣ Lambda Trigger ---> SNS invokes the selfheal-replacer Lambda with that payload.
+5️ Lambda Trigger ---> SNS invokes the selfheal-replacer Lambda with that payload.
 
-6️⃣ Parse & Validate ---> Extracts InstanceId from Message.Trigger.Dimensions.
+6️ Parse & Validate ---> Extracts InstanceId from Message.Trigger.Dimensions.
 
-7️⃣ Terminate Old Instance ---> Lambda calls TerminateInstances for the unhealthy box.
+7️ Terminate Old Instance ---> Lambda calls TerminateInstances for the unhealthy box.
 
-8️⃣ Launch Replacement ---> Lambda spins up a fresh EC2 with env-configured params:
+8️ Launch Replacement ---> Lambda spins up a fresh EC2 with env-configured params:
 AMI_ID
 INSTANCE_TYPE
 SUBNET_ID
 SECURITY_GROUP
 KEY_NAME
 
-9️⃣ Associate Elastic IP ---> Lambda attaches the pre-allocated Elastic IP (EIP_ALLOCATION_ID) to the new instance.
+9️ Associate Elastic IP ---> Lambda attaches the pre-allocated Elastic IP (EIP_ALLOCATION_ID) to the new instance.
 This ensures your app is always reachable at the same public IP.
 
-🔟 Tagging ---> New instance auto-tagged:
+10 Tagging ---> New instance auto-tagged:
 SelfHealed=true
 ReplacedInstance=<old-id>
 Timestamp=<UTC>
 
-1️⃣1️⃣ Notify & Report ---> Lambda pushes a summary back to SNS.
+11 Notify & Report ---> Lambda pushes a summary back to SNS.
 You (via email/Slack) get:
 ❌ Old Instance ID
 ✅ New Instance ID + Elastic IP
@@ -69,14 +69,14 @@ You (via email/Slack) get:
 
 ---
 
-## 📂 Project Structure Diagram
+##  Project Structure Diagram
 
 <img width="1536" height="1024" alt="self-healing-ec2-structure" src="https://github.com/user-attachments/assets/87d5d109-ed00-40b5-9adb-314742fdb42f" />
 
 
 ---
 
-## 🚀 Deployment Steps
+##  Deployment Steps
 1. **Launch EC2 Instance**  
    - Select AMI, instance type, subnet, security group, and key pair.  
 
@@ -109,7 +109,7 @@ You (via email/Slack) get:
 
 ---
 
-## 📸 Screenshots
+##  Screenshots
 - CloudWatch Alarm
    <img width="955" height="472" alt="image" src="https://github.com/user-attachments/assets/bde641f9-ebb1-43cd-8f90-9640ff498d83" />
  
@@ -127,7 +127,7 @@ You (via email/Slack) get:
 ---
 
 
-## 🏷️ NOTE 
+##  NOTE 
    - lambda_function_basic.py
    - https://github.com/harshitmaster8851/aws-ec2-self-healing-infra/blob/main/lambda/lambda_function_basic.py
    - Minimal, production-ready self-healing Lambda.
@@ -142,7 +142,7 @@ You (via email/Slack) get:
      
 
    
-## 🔮 Future Plans
+##  Future Plans
 In the next phase of this project, I plan to:
 1. Implement Auto Scaling Groups to replace the manual Lambda approach.
 2. Integrate application-level health checks for smarter recovery.
@@ -150,7 +150,7 @@ In the next phase of this project, I plan to:
 
 ---
 
-## 👩‍💻 Author
+##  Author
 **Harshit Rastogi**  
 B.Tech 3rd Year @ USICT, Dwarka    
 
