@@ -1,3 +1,5 @@
+# Purpose: Debug-friendly self-healing Lambda handler with safer parsing.
+# Role: Helps troubleshoot SNS payloads, logs full events, and supports fallback/manual testing flow.
 import boto3, os, json
 from datetime import datetime
 

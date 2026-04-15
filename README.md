@@ -1,212 +1,275 @@
-# 🚀 AWS Self-Healing Infrastructure using Terraform
+# AWS Self-Healing Infrastructure on AWS (Terraform + State Reconciliation)
 
-## 📌 Project Overview
+Production-style self-healing setup on AWS with Auto Scaling, Load Balancing, health checks, and Terraform-based lifecycle management.
 
-This project demonstrates a **production-grade self-healing cloud architecture on AWS**, designed to maintain high availability and automatically recover from failures.
+## Why this project matters
 
-Initially built using a **manual AWS setup**, the system was later migrated to **Terraform (Infrastructure as Code)** to achieve:
+This project is not just about creating cloud resources. It demonstrates a complete infrastructure evolution:
 
-- ⚡ Scalability  
-- 🧾 Version-controlled infrastructure  
-- 🔄 Automated state management  
-- ❌ Reduced manual intervention  
+1. Initial architecture with a Lambda-first approach.
+2. Migration to EC2 + ALB + Auto Scaling Group for better control and scale.
+3. Final migration to Terraform with imported AWS resources and state reconciliation.
 
-This mirrors how real-world systems (SaaS, e-commerce platforms) ensure **fault tolerance and continuous uptime**.
+This is the same type of migration path many real teams follow when moving from rapid prototyping to production-ready infrastructure.
 
----
+## Tech stack
 
-## 🛠️ Tech Stack
+| Area | Tools |
+| --- | --- |
+| Cloud | AWS (EC2, ALB, Target Group, ASG, CloudWatch, SNS, Lambda) |
+| IaC | Terraform |
+| App | Python (Flask) |
+| OS | Amazon Linux |
 
-| Category       | Tools |
-|---------------|------|
-| Cloud         | AWS (EC2, ALB, ASG, CloudWatch, SNS) |
-| IaC           | Terraform |
-| Application   | Python (Flask) |
-| OS            | Amazon Linux |
+## Final architecture
 
----
+### Request flow
 
-## 🏗️ Architecture
+User -> ALB -> Target Group (/health) -> Auto Scaling Group -> EC2 instances -> Flask app
 
-### 🔄 Request Flow
+### Architecture diagram
 
-User → ALB → Target Group → Auto Scaling Group → EC2 → Flask App
+```mermaid
+flowchart TB
+    U[User / Client] -->|HTTP Request| ALB[Application Load Balancer]
 
----
+    ALB --> TG[Target Group\nHealth Check: /health]
 
+    subgraph ASG[Auto Scaling Group]
+      direction LR
+      EC2A[EC2 Instance A\nFlask App :5000]
+      EC2B[EC2 Instance B\nFlask App :5000]
+      EC2N[EC2 Instance N\nFlask App :5000]
+    end
 
-### 📊 Diagram
+    TG --> EC2A
+    TG --> EC2B
+    TG --> EC2N
 
-        ┌───────────────┐
-        │     User      │
-        └──────┬────────┘
-               │ HTTP Request
-        ┌──────▼────────┐
-        │      ALB      │
-        └──────┬────────┘
-               │
-        ┌──────▼────────┐
-        │ Target Group  │
-        │   (/health)   │
-        └──────┬────────┘
-               │
-    ┌──────────▼──────────┐
-    │   Auto Scaling Group│
-    └──────┬────────┬─────┘
-           │        │
-    ┌──────▼───┐ ┌──▼──────┐
-    │  EC2 #1  │ │  EC2 #2 │
-    │ Flask App│ │ Flask App│
-    └──────────┘ └─────────┘
+    subgraph LT[Launch Template]
+      UD[User Data Script\nInstall Python/Flask + Start App + CloudWatch Agent]
+    end
 
+    LT --> ASG
 
----
+    CW[CloudWatch Metrics and Logs] --> POL[ASG CPU Target Tracking Policy]
+    POL -->|Scale Out / Scale In| ASG
 
-## ✨ System Highlights
+    TG -. Unhealthy target removed .-> ASG
+    ASG -. Auto replacement .-> TG
 
-### 🔁 Self-Healing Mechanism
-- Health checks via `/health` endpoint  
-- Unhealthy instances are:
-  - Removed from traffic  
-  - Terminated by ASG  
-  - Replaced automatically  
+    ALB -->|Only healthy instances receive traffic| U
+```
 
----
+## Demo and Screenshots
 
-### ⚡ Zero Downtime
-- ALB routes traffic **only to healthy instances**
-- Replacement happens **seamlessly in the background**
+### Demo link
 
----
+- Live demo: [Add your demo URL here](https://your-demo-link-here)
+- Demo video (optional): [Add your video link here](https://your-video-link-here)
 
-### ⚙️ Automated Provisioning
-EC2 instances use **User Data scripts** to:
+### Screenshots
 
-- Install Python + Flask  
-- Deploy application  
-- Start services automatically  
+- Architecture overview
 
----
+       ![Architecture Overview](https://via.placeholder.com/1200x700?text=Add+Architecture+Screenshot)
 
-### 📊 Centralized Logging
-- CloudWatch Agent pushes logs (`output.log`)
-- Enables:
-  - Monitoring  
-  - Debugging  
-  - Alerting  
+- ALB Target Group health
 
----
+       ![ALB Target Group Health](https://via.placeholder.com/1200x700?text=Add+Target+Group+Health+Screenshot)
 
-## 🚀 Infrastructure State Reconciliation (Advanced)
+- Auto Scaling activity
 
-This is the **core highlight** of the project — not just building infra, but **migrating real infrastructure into Terraform safely**.
+       ![ASG Activity](https://via.placeholder.com/1200x700?text=Add+ASG+Activity+Screenshot)
 
-### 🔄 Migration Strategy
+- Self-healing proof (old instance replaced by new instance)
 
-#### 1. Code Definition
-- Created:
-  - `provider.tf`
-  - `main.tf`
-  - `userdata.sh`
-- Matched Terraform config with live AWS setup  
+       ![Self-Healing Proof](https://via.placeholder.com/1200x700?text=Add+Self-Healing+Proof+Screenshot)
 
----
+- Terraform state reconciliation proof
 
-#### 2. State Import
-Imported existing resources:
+       ![Terraform State Reconciliation](https://via.placeholder.com/1200x700?text=Add+Terraform+Import+or+Plan+Screenshot)
 
-- Security Groups  
-- Target Group  
-- ALB  
-- Auto Scaling Group  
+## Migration journey
 
-```bash
-terraform import <resource> <aws-resource-id>
+### Phase 1: Lambda-first setup
 
----
+The project started with a Lambda-based design for lightweight compute and quick setup.
 
-### 3. Conflict Resolution
+Why move beyond Lambda for this use case:
 
-- Fixed duplicate resource definitions  
-- Resolved provider issues  
-- Ensured clean `terraform plan`  
+- Needed persistent application runtime behavior.
+- Needed fine-grained control over instance health and process-level recovery.
+- Needed predictable scaling behavior for web traffic behind a load balancer.
 
----
+### Phase 2: Move to EC2 + ALB + ASG
 
-### 4. Drift Correction (Critical Fix)
+I migrated the runtime from Lambda to EC2 instances managed by an ASG and fronted by an ALB.
 
-- Detected ASG using outdated Launch Template  
-- Replaced ASG via Terraform  
-- Ensured new instances use latest configuration  
+Key outcomes of this phase:
 
----
+- Health checks on /health endpoint.
+- ALB routes traffic only to healthy instances.
+- Unhealthy instances are removed from target group traffic, terminated by ASG, and automatically replaced.
+- User data script provisions instances on boot and starts the Flask app.
+- Attached a target-tracking inline scaling policy on ASG based on CPU utilization.
+- When CPU load increases, ASG launches new instances to handle traffic, and ALB automatically diverts requests across healthy instances.
 
-### 5. State Management
+### Phase 3: Full Terraform adoption
 
-- Maintained clean Terraform state  
-- Prevented drift and misconfiguration  
+After validating the architecture manually in AWS, I moved the complete setup to Terraform for repeatable and version-controlled infrastructure.
 
----
+Benefits achieved:
 
-## 🔧 Deployment Workflow
+- Infra changes tracked in code and git history.
+- Safer updates through plan-before-apply workflow.
+- Reduced manual drift and click-ops.
 
-### 🔹 Manual Setup (Initial Phase)
+## Infrastructure State Reconciliation (ADVANCED)
 
-- Deploy Flask app on EC2  
-- Configure `/health` endpoint  
-- Create Target Group + ALB  
-- Configure Auto Scaling Group  
+This is the strongest part of the project: importing existing live AWS infrastructure into Terraform state and reconciling drift safely.
 
----
+### Step 1: Define Terraform resources to match live AWS
 
-### 🔹 Terraform Transition
+Created and refined:
+
+- terraform/provider.tf
+- terraform/main.tf
+- user-data/userdata.sh
+
+Goal: ensure Terraform resource blocks accurately represent resources already running in AWS.
+
+### Step 2: Import existing AWS resources into state
+
+Imported real resources instead of recreating them:
+
+- Security Groups
+- Launch Template
+- Target Group
+- Application Load Balancer
+- Auto Scaling Group
+
+Example pattern:
 
 ```bash
-# Initialize Terraform
+terraform import <terraform_resource_address> <aws_resource_id>
+```
+
+### Step 3: Resolve plan conflicts
+
+After import, I fixed mismatches between code and cloud:
+
+- Removed duplicate definitions.
+- Corrected provider/resource arguments.
+- Aligned naming and references.
+- Re-ran terraform plan until changes were intentional and understood.
+
+### Step 4: Correct drift (critical fix)
+
+Main drift issue found:
+
+- ASG was still linked to an old Launch Template version.
+
+Fix applied:
+
+- Updated Terraform configuration and replaced/updated ASG behavior so new instances came from the latest template.
+
+Result:
+
+- New instances launched with the expected user data and configuration.
+
+### Step 5: Stabilize state management
+
+- Maintained a clean Terraform state lifecycle.
+- Used plan + apply discipline to avoid accidental replacement.
+- Ensured state now reflects real infrastructure.
+
+## Self-healing behavior summary
+
+When an app process fails on an instance:
+
+1. ALB health check fails.
+2. Target is marked unhealthy and removed from traffic.
+3. ASG terminates unhealthy instance.
+4. ASG launches replacement instance automatically.
+5. New instance boots via user data and rejoins target group.
+
+## Traffic spike handling with CPU policy
+
+- ASG uses a CPU utilization target-tracking inline policy.
+- During traffic spikes, higher CPU triggers scale-out and additional EC2 instances are launched.
+- ALB continuously distributes traffic to all healthy targets, including newly launched instances, to keep response performance stable.
+
+## Deployment workflow
+
+```bash
+# from terraform directory
 terraform init
-
-# Import existing resources
-terraform import ...
-
-# Validate infrastructure
+terraform validate
 terraform plan
-
-# Apply configuration
 terraform apply
+```
 
-## Testing Self-Healing
+For imported infrastructure:
 
 ```bash
-# SSH into instance
+terraform import <terraform_resource_address> <aws_resource_id>
+terraform plan
+```
+
+## Test the self-healing flow
+
+```bash
+# connect to an instance
 ssh -i your-key.pem ec2-user@<instance-ip>
 
-# Simulate failure
+# simulate app failure
 pkill -f flask
+```
 
-Expected Behavior
-Instance marked unhealthy
-Traffic stopped
-ASG terminates instance
-New instance launched automatically
-Learning Outcomes
-Deep understanding of AWS high-availability architecture
-Hands-on with:
-Terraform (init, plan, apply, import, state)
-Learned state reconciliation (real DevOps skill)
-Debugged real infrastructure issues
-Migrated manual (click-ops) → IaC pipeline
-Best Practices
-Do NOT commit terraform.tfstate
-Restrict SSH access (port 22)
-Use least-privilege IAM policies
-Real-World Impact
+Expected result:
 
-This architecture is used in:
+- Instance becomes unhealthy.
+- ALB stops routing traffic to it.
+- ASG replaces it with a new healthy instance.
 
-SaaS platforms → uptime guarantee
-E-commerce → traffic spike handling
-APIs → automatic failure recovery
-Author
-Harshit Rastogi
-B.Tech 3rd Year — USICT, Dwarka
-Aspiring DevOps & Cloud Engineer
+## Repository structure
+
+```text
+.
+|-- LICENSE
+|-- README.md
+|-- docs/
+|   |-- Setup_steps.md
+|   |-- launch_templates.md
+|   |-- project_overview.md
+|   `-- real_world_usecase.md
+|-- lambda/
+|   |-- lambda_function_basic.py
+|   `-- lambda_function_debug.py
+|-- terraform/
+|   |-- main.tf
+|   `-- provider.tf
+`-- user-data/
+    `-- userdata.sh
+```
+
+## Learning outcomes
+
+- Designed highly available AWS architecture with ALB + ASG.
+- Implemented health-based self-healing on EC2.
+- Practiced real-world Terraform import and state reconciliation.
+- Migrated from prototype-style infrastructure to production-style IaC.
+
+## Best practices followed
+
+- Do not commit terraform.tfstate files.
+- Restrict SSH access and minimize open ports.
+- Apply least-privilege IAM permissions.
+- Always review terraform plan before terraform apply.
+
+## Author
+
+Harshit Rastogi  
+B.Tech 3rd Year, USICT Dwarka  
+Aspiring DevOps and Cloud Engineer

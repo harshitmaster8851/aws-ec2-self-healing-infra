@@ -1,3 +1,5 @@
+# Purpose: Minimal production-style self-healing Lambda handler.
+# Role: Handles CloudWatch->SNS alarms to replace unhealthy EC2 instances with low verbosity.
 import boto3, os, json
 from datetime import datetime
 
