@@ -2,6 +2,23 @@
 
 Production-style self-healing setup on AWS with Auto Scaling, Load Balancing, health checks, and Terraform-based lifecycle management.
 
+## Project overview
+
+This project demonstrates the evolution of a cloud reliability system in three practical phases:
+
+1. Lambda-first automated recovery for failed EC2 workloads.
+2. Migration to ALB + ASG for health-based traffic routing and automatic replacement.
+3. Full Terraform adoption with Infrastructure State Reconciliation (ADVANCED) to import and manage existing AWS resources safely.
+
+The final result is a production-style, self-healing architecture that improves uptime, scaling behavior, and operational consistency.
+
+## Real-world use cases
+
+- E-commerce platforms handling sudden traffic spikes during sales.
+- SaaS products that require continuous availability for customer dashboards and APIs.
+- Startup teams reducing manual incident handling through automated recovery.
+- DevOps learning portfolios demonstrating high availability, scaling, and IaC migration skills.
+
 ## Why this project matters
 
 This project is not just about creating cloud resources. It demonstrates a complete infrastructure evolution:
