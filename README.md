@@ -83,7 +83,6 @@ flowchart TB
 
 ### Demo link
 
-- Live demo: [Add your demo URL here](https://your-demo-link-here)
 - Demo video (optional): [Add your video link here](https://your-video-link-here)
 
 ### Screenshots
@@ -143,7 +142,7 @@ Benefits achieved:
 - Safer updates with plan before apply.
 - Less manual console work.
 
-## Infrastructure State Reconciliation (ADVANCED)
+## Infrastructure State Reconciliation
 
 This was the most important learning part for me: managing already-running AWS resources through Terraform without rebuilding from scratch.
 
@@ -290,4 +289,4 @@ Expected result:
 
 Harshit Rastogi  
 B.Tech 3rd Year, USICT Dwarka  
-Aspiring DevOps and Cloud Engineer
+DevOps and Cloud Engineer
