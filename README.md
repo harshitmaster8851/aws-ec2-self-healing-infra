@@ -1,16 +1,16 @@
 # AWS Self-Healing Infrastructure on AWS (Terraform + State Reconciliation)
 
-Production-style self-healing setup on AWS with Auto Scaling, Load Balancing, health checks, and Terraform-based lifecycle management.
+I built this project to learn how real systems recover from failures without manual intervention. It started small, then gradually moved to a more production-style setup with ALB, ASG, and Terraform.
 
 ## Project overview
 
-This project demonstrates the evolution of a cloud reliability system in three practical phases:
+This project evolved in 3 phases:
 
-1. Lambda-first automated recovery for failed EC2 workloads.
-2. Migration to ALB + ASG for health-based traffic routing and automatic replacement.
-3. Full Terraform adoption with Infrastructure State Reconciliation (ADVANCED) to import and manage existing AWS resources safely.
+1. Lambda-first: automatic recovery for failed EC2 instances.
+2. ALB + ASG migration: health-based routing and automatic instance replacement.
+3. Terraform migration: imported existing AWS resources and reconciled state/drift.
 
-The final result is a production-style, self-healing architecture that improves uptime, scaling behavior, and operational consistency.
+End result: a self-healing setup that is easier to scale, easier to manage, and closer to how teams run infra in production.
 
 ## Real-world use cases
 
@@ -21,13 +21,14 @@ The final result is a production-style, self-healing architecture that improves 
 
 ## Why this project matters
 
-This project is not just about creating cloud resources. It demonstrates a complete infrastructure evolution:
+Most tutorials show only greenfield setups. In real work, we often need to migrate existing running infrastructure without breaking it.
 
-1. Initial architecture with a Lambda-first approach.
-2. Migration to EC2 + ALB + Auto Scaling Group for better control and scale.
-3. Final migration to Terraform with imported AWS resources and state reconciliation.
+That is why this project focuses on:
 
-This is the same type of migration path many real teams follow when moving from rapid prototyping to production-ready infrastructure.
+- moving from a basic Lambda-first model to ALB + ASG
+- introducing CPU-based auto scaling
+- importing existing AWS resources into Terraform state
+- fixing drift safely instead of recreating everything
 
 ## Tech stack
 
@@ -111,17 +112,17 @@ flowchart TB
 
 ### Phase 1: Lambda-first setup
 
-The project started with a Lambda-based design for lightweight compute and quick setup.
+I initially used a Lambda-based recovery flow (CloudWatch -> SNS -> Lambda) to replace unhealthy EC2 instances.
 
 Why move beyond Lambda for this use case:
 
-- Needed persistent application runtime behavior.
-- Needed fine-grained control over instance health and process-level recovery.
-- Needed predictable scaling behavior for web traffic behind a load balancer.
+- Needed stronger control over web traffic routing.
+- Needed built-in health-based lifecycle management.
+- Needed cleaner scale-out behavior during load spikes.
 
 ### Phase 2: Move to EC2 + ALB + ASG
 
-I migrated the runtime from Lambda to EC2 instances managed by an ASG and fronted by an ALB.
+Then I moved to EC2 instances managed by ASG and fronted by ALB.
 
 Key outcomes of this phase:
 
@@ -130,21 +131,21 @@ Key outcomes of this phase:
 - Unhealthy instances are removed from target group traffic, terminated by ASG, and automatically replaced.
 - User data script provisions instances on boot and starts the Flask app.
 - Attached a target-tracking inline scaling policy on ASG based on CPU utilization.
-- When CPU load increases, ASG launches new instances to handle traffic, and ALB automatically diverts requests across healthy instances.
+- When CPU increases, ASG launches new instances and ALB starts routing traffic to healthy new targets.
 
 ### Phase 3: Full Terraform adoption
 
-After validating the architecture manually in AWS, I moved the complete setup to Terraform for repeatable and version-controlled infrastructure.
+After validating everything manually in AWS, I moved the setup to Terraform for repeatable and version-controlled changes.
 
 Benefits achieved:
 
-- Infra changes tracked in code and git history.
-- Safer updates through plan-before-apply workflow.
-- Reduced manual drift and click-ops.
+- Infra changes tracked in code.
+- Safer updates with plan before apply.
+- Less manual console work.
 
 ## Infrastructure State Reconciliation (ADVANCED)
 
-This is the strongest part of the project: importing existing live AWS infrastructure into Terraform state and reconciling drift safely.
+This was the most important learning part for me: managing already-running AWS resources through Terraform without rebuilding from scratch.
 
 ### Step 1: Define Terraform resources to match live AWS
 
@@ -209,13 +210,13 @@ When an app process fails on an instance:
 2. Target is marked unhealthy and removed from traffic.
 3. ASG terminates unhealthy instance.
 4. ASG launches replacement instance automatically.
-5. New instance boots via user data and rejoins target group.
+5. New instance boots from user data and joins the target group.
 
 ## Traffic spike handling with CPU policy
 
 - ASG uses a CPU utilization target-tracking inline policy.
 - During traffic spikes, higher CPU triggers scale-out and additional EC2 instances are launched.
-- ALB continuously distributes traffic to all healthy targets, including newly launched instances, to keep response performance stable.
+- ALB distributes traffic to healthy targets, including newly launched instances.
 
 ## Deployment workflow
 
@@ -273,10 +274,10 @@ Expected result:
 
 ## Learning outcomes
 
-- Designed highly available AWS architecture with ALB + ASG.
+- Built and tested a highly available setup with ALB + ASG.
 - Implemented health-based self-healing on EC2.
-- Practiced real-world Terraform import and state reconciliation.
-- Migrated from prototype-style infrastructure to production-style IaC.
+- Learned Terraform import and state reconciliation on real resources.
+- Practiced moving from manual setup to IaC.
 
 ## Best practices followed
 
