@@ -48,35 +48,26 @@ User -> ALB -> Target Group (/health) -> Auto Scaling Group -> EC2 instances -> 
 ### Architecture diagram
 
 ```mermaid
-flowchart TB
-    U[User / Client] -->|HTTP Request| ALB[Application Load Balancer]
+flowchart LR
+              U[User Client] --> ALB[Application Load Balancer]
+              ALB --> TG[Target Group - Health Check /health]
 
-    ALB --> TG[Target Group\nHealth Check: /health]
+              subgraph ASG[Auto Scaling Group]
+                     EC2A[EC2 A - Flask :5000]
+                     EC2B[EC2 B - Flask :5000]
+                     EC2N[EC2 N - Flask :5000]
+              end
 
-    subgraph ASG[Auto Scaling Group]
-      direction LR
-      EC2A[EC2 Instance A\nFlask App :5000]
-      EC2B[EC2 Instance B\nFlask App :5000]
-      EC2N[EC2 Instance N\nFlask App :5000]
-    end
+              TG --> EC2A
+              TG --> EC2B
+              TG --> EC2N
 
-    TG --> EC2A
-    TG --> EC2B
-    TG --> EC2N
+              LT[Launch Template + User Data] --> ASG
+              CW[CloudWatch Metrics Logs] --> POL[CPU Target Tracking Policy]
+              POL --> ASG
 
-    subgraph LT[Launch Template]
-      UD[User Data Script\nInstall Python/Flask + Start App + CloudWatch Agent]
-    end
-
-    LT --> ASG
-
-    CW[CloudWatch Metrics and Logs] --> POL[ASG CPU Target Tracking Policy]
-    POL -->|Scale Out / Scale In| ASG
-
-    TG -. Unhealthy target removed .-> ASG
-    ASG -. Auto replacement .-> TG
-
-    ALB -->|Only healthy instances receive traffic| U
+              TG -. marks unhealthy .-> ASG
+              ASG -. replaces instance .-> TG
 ```
 
 ## Demo and Screenshots
